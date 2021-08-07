@@ -11,7 +11,7 @@ from discord.ext import commands
 activity = discord.Activity(
     type=discord.ActivityType.listening, name="your commands")
 client = commands.Bot(command_prefix='$', activity=activity,
-                   description="This is a Helper Bot")
+                      description="This is a Helper Bot")
 
 
 class OraBot(discord.Client):
@@ -20,22 +20,25 @@ class OraBot(discord.Client):
         for file in os.listdir('./cogs'):
             if file.endswith('.py'):
                 client.load_extension(f'cogs.{file[:-3]}')
-                print(f'Loaded cog: {file[:-3]}')
+                print(f'Loaded cog: {file[:-3]}\n')
         client.run(envloader.getToken())
 
-        
     @client.command()
     async def load(ctx, extension):
         client.load_extension(f'cogs.{extension}')
+
     @client.command()
     async def unload(ctx, extension):
         client.unload_extension(f'cogs.{extension}')
-        
+
     @client.event
     async def on_ready():
-        print('Connected to bot: {}'.format(client.user.name))
-        print('Bot ID: {}'.format(client.user.id))
+        print(f'Connected to bot: {client.user.name}')
+        print(f'Bot ID: {client.user.id}')
+        for guild in client.guilds:
+            print(f'Connected to guild: {guild.name}')
         print('Orabot connected!')
+
     @client.command()
     async def info(ctx):
         embed = discord.Embed(title=f"{ctx.guild.name}", description=f"{ctx.guild.description}",
@@ -53,10 +56,6 @@ class OraBot(discord.Client):
     @client.command()
     async def giverole(self, ctx):
         await ctx.send("giverole ran")
-
-
-
-
 
 
 if __name__ == '__main__':
