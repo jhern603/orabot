@@ -1,44 +1,55 @@
 import discord
+import os
+
+from utilities.envloader import *
 from discord.ext import commands
-import datetime
-from urllib import parse, request
-import re
+import time
 
 activity = discord.Activity(
     type=discord.ActivityType.listening, name="your commands")
-bot = commands.Bot(command_prefix='$', activity=activity,
-                   description="This is a Helper Bot")
+client = commands.Bot(command_prefix='$', activity=activity,
+                      description="This is the unofficial official bot for the Oracle interns server!")
 
 
-class MyClient(discord.Client):
+class OraBot(discord.Client):
 
-    @bot.command()
-    async def ping(ctx):
-        await ctx.send('Pong!🏓 {0}s'.format(round(bot.latency, 3)))
+    def __init__(self):
+        for file in os.listdir('./cogs'):
+            if file.endswith('.py'):
+                client.load_extension(f'cogs.{file[:-3]}')
+                print(f'Loaded cog: {file[:-3]}')
+        client.run(envloader.getToken())
 
-    @bot.command()
-    async def info(ctx):
-        embed = discord.Embed(title=f"{ctx.guild.name}", description=f"{ctx.guild.description}",
-                              timestamp=datetime.datetime.utcnow(), color=discord.Color.blue())
-        embed.add_field(name="Server created at",
-                        value=f"{ctx.guild.created_at}")
-        embed.add_field(name="Server Owner", value=f"{ctx.guild.owner}")
-        embed.add_field(name="Server Region", value=f"{ctx.guild.region}")
-        embed.add_field(name="Server ID", value=f"{ctx.guild.id}")
-        embed.set_thumbnail(
-            url="https://pluralsight.imgix.net/paths/python-7be70baaac.png")
+    @client.command()
+    async def load(self, ctx, extension):
+        client.load_extension(f'cogs.{extension}')
 
-        await ctx.send(embed=embed)
+    @client.command()
+    async def unload(self, ctx, extension):
+        client.unload_extension(f'cogs.{extension}')
 
-    @bot.command()
-    async def giverole(ctx):
-      await ctx.send("giverole ran")
-      
-    @bot.event
+    @client.command()
+    async def reload(self):
+        for file in os.listdir('./cogs'):
+            if file.endswith('.py'):
+                client.reload_extension(f'cogs.{file[:-3]}')
+                print(f'Reloaded cog: {file[:-3]}')
+        channel = client.get_channel(873247206617006160)
+        await channel.send("Cogs reloaded!")
+
+    @client.event
     async def on_ready():
-        print('Connected to bot: {}'.format(bot.user.name))
-        print('Bot ID: {}'.format(bot.user.id))
+        print(f'\nConnected to bot: {client.user.name}')
+        print(f'Bot ID: {client.user.id}')
+        for guild in client.guilds:
+            print(f'Connected to guild: {guild.name}')
         print('Orabot connected!')
-    
-#I don't have this on the Oracle server right now, but can add it
-bot.run('TOKEN')
+
+    # @client.event
+    # async def on_message(message):
+    #     if message.channel.name == 'jose-channel':
+    #         await client.process_commands(message)
+
+
+if __name__ == '__main__':
+    instance = OraBot()
