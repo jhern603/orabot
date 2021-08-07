@@ -1,22 +1,42 @@
 import discord
-from discord.ext import commands
+import os
 import datetime
-from urllib import parse, request
+import aiohttp
 import re
+
+from utilities.envloader import *
+from urllib import parse, request
+from discord.ext import commands
 
 activity = discord.Activity(
     type=discord.ActivityType.listening, name="your commands")
-bot = commands.Bot(command_prefix='$', activity=activity,
+client = commands.Bot(command_prefix='$', activity=activity,
                    description="This is a Helper Bot")
 
 
-class MyClient(discord.Client):
+class OraBot(discord.Client):
 
-    @bot.command()
-    async def ping(ctx):
-        await ctx.send('Pong!🏓 {0}s'.format(round(bot.latency, 3)))
+    def __init__(self):
+        for file in os.listdir('./cogs'):
+            if file.endswith('.py'):
+                client.load_extension(f'cogs.{file[:-3]}')
+                print(f'Loaded cog: {file[:-3]}')
+        client.run(envloader.getToken())
 
-    @bot.command()
+        
+    @client.command()
+    async def load(ctx, extension):
+        client.load_extension(f'cogs.{extension}')
+    @client.command()
+    async def unload(ctx, extension):
+        client.unload_extension(f'cogs.{extension}')
+        
+    @client.event
+    async def on_ready():
+        print('Connected to bot: {}'.format(client.user.name))
+        print('Bot ID: {}'.format(client.user.id))
+        print('Orabot connected!')
+    @client.command()
     async def info(ctx):
         embed = discord.Embed(title=f"{ctx.guild.name}", description=f"{ctx.guild.description}",
                               timestamp=datetime.datetime.utcnow(), color=discord.Color.blue())
@@ -30,15 +50,14 @@ class MyClient(discord.Client):
 
         await ctx.send(embed=embed)
 
-    @bot.command()
-    async def giverole(ctx):
-      await ctx.send("giverole ran")
-      
-    @bot.event
-    async def on_ready():
-        print('Connected to bot: {}'.format(bot.user.name))
-        print('Bot ID: {}'.format(bot.user.id))
-        print('Orabot connected!')
-    
-#I don't have this on the Oracle server right now, but can add it
-bot.run('TOKEN')
+    @client.command()
+    async def giverole(self, ctx):
+        await ctx.send("giverole ran")
+
+
+
+
+
+
+if __name__ == '__main__':
+    instance = OraBot()
